@@ -16,7 +16,7 @@ public static class MauiProgram
             })
             .ConfigureMauiHandlers(h =>
             {
-#if IOS
+#if IOS || ANDROID
                 h.AddHandler(typeof(CollectionView), typeof(MyCVHandler));
 #endif
             });
