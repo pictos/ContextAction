@@ -1,6 +1,9 @@
+using System.Collections;
 using Android.App;
 using Android.Content;
+using Android.Nfc.CardEmulators;
 using Android.Views;
+using Android.Widget;
 using AndroidX.RecyclerView.Widget;
 using Microsoft.Maui.Controls.Handlers.Items;
 
@@ -21,8 +24,6 @@ class MyCVHandler : CollectionViewHandler
 
 public class MyRecyclerView : MauiRecyclerView<ReorderableItemsView, GroupableItemsViewAdapter<ReorderableItemsView, IGroupableItemsViewSource>, IGroupableItemsViewSource>
 {
-    public static int SelectedPosition { get; set; } = -1;
-
     public MyRecyclerView(Context context, Func<IItemsLayout> getItemsLayout, Func<GroupableItemsViewAdapter<ReorderableItemsView, IGroupableItemsViewSource>> getAdapter) : base(context, getItemsLayout, getAdapter)
     {
 
@@ -31,32 +32,112 @@ public class MyRecyclerView : MauiRecyclerView<ReorderableItemsView, GroupableIt
 
 public class MyViewAdapter : ReorderableItemsViewAdapter<ReorderableItemsView, IGroupableItemsViewSource>
 {
+     IGroupableItemsViewSource  itemsSource = default!;
     public MyViewAdapter(ReorderableItemsView reorderableItemsView, Func<Microsoft.Maui.Controls.View, Context, ItemContentView>? createView = null) : base(reorderableItemsView, createView)
     {
+    }
+
+    protected override IGroupableItemsViewSource CreateItemsSource()
+    {
+        return itemsSource = base.CreateItemsSource();
     }
 
     public override void OnBindViewHolder(RecyclerView.ViewHolder holder, int position)
     {
         base.OnBindViewHolder(holder, position);
 
-        // Store the position in the ViewHolder for context menu
-        holder.ItemView.Tag = position;
+        // TODO: IS this safe? I mean, there can be only one header?
+        position -= itemsSource.HasHeader ? 1 : 0;
 
-        // Register EACH individual item view for context menu (this is key!)
-        MainActivity.Instance.RegisterForContextMenu(holder.ItemView);
-        
-        System.Diagnostics.Debug.WriteLine($"Registered item view for floating context menu at position: {position}");
+        holder.ItemView.Tag = position;
+        var contextMenuListener = new ItemContextMenuListener(position);
+        holder.ItemView.SetOnCreateContextMenuListener(contextMenuListener);
+
+        System.Diagnostics.Debug.WriteLine($"Set context menu listener for position {position}");
     }
 
     public override void OnViewRecycled(Java.Lang.Object holder)
     {
         base.OnViewRecycled(holder);
         
-        // Clean up context menu registration when view is recycled
         if (holder is RecyclerView.ViewHolder viewHolder)
         {
-            MainActivity.Instance.UnregisterForContextMenu(viewHolder.ItemView);
+            viewHolder.ItemView.SetOnCreateContextMenuListener(null);
         }
+        
+        System.Diagnostics.Debug.WriteLine("ViewHolder recycled - context menu cleaned up");
+    }
+}
+
+public class ItemContextMenuListener : Java.Lang.Object, Android.Views.View.IOnCreateContextMenuListener
+{
+    private readonly int position;
+
+    public ItemContextMenuListener(int position)
+    {
+        this.position = position;
+    }
+
+    public void OnCreateContextMenu(IContextMenu? menu, Android.Views.View? v, IContextMenuContextMenuInfo? menuInfo)
+    {
+        if (menu == null || v == null) return;
+
+        menu.SetHeaderTitle($"Item {position}");
+
+        var editItem = menu.Add(0, 1, 0, "Edit Item")!;
+        var deleteItem = menu.Add(0, 2, 1, "Delete Item")!;
+        var shareItem = menu.Add(0, 3, 2, "Share Item")!;
+        var addItem = menu.Add(0, 4, 3, "Add Item")!;
+
+
+        editItem.SetOnMenuItemClickListener(new MenuItemClickListener(position, "Edit"));
+        deleteItem.SetOnMenuItemClickListener(new MenuItemClickListener(position, "Delete"));
+        shareItem.SetOnMenuItemClickListener(new MenuItemClickListener(position, "Share"));
+        addItem.SetOnMenuItemClickListener(new MenuItemClickListener(position, "Add"));
+
+        System.Diagnostics.Debug.WriteLine($"Floating context menu created for position: {position} (listener-based, no Activity!)");
+    }
+}
+
+public class MenuItemClickListener : Java.Lang.Object, IMenuItemOnMenuItemClickListener
+{
+    private readonly int _position;
+    private readonly string _action;
+
+    public MenuItemClickListener(int position, string action)
+    {
+        _position = position;
+        _action = action;
+    }
+
+    public bool OnMenuItemClick(IMenuItem? item)
+    {
+        if (item == null) return false;
+
+        System.Diagnostics.Debug.WriteLine($"{_action} selected for item at position {_position}");
+        
+        // Handle the action based on the type
+        switch (_action)
+        {
+            case "Edit":
+                // Handle edit action
+                System.Diagnostics.Debug.WriteLine($"Handling edit for position {_position}");
+                break;
+            case "Delete":
+                // Handle delete action
+                System.Diagnostics.Debug.WriteLine($"Handling delete for position {_position}");
+                break;
+            case "Share":
+                // Handle share action
+                System.Diagnostics.Debug.WriteLine($"Handling share for position {_position}");
+                break;
+            case "Add":
+                // Handle add action
+                System.Diagnostics.Debug.WriteLine($"Handling add for position {_position}");
+                break;
+        }
+        
+        return true; // Consume the click event
     }
 }
 

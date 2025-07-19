@@ -4,6 +4,15 @@
              x:Class="ContextMenu.MainPage">
 
    <CollectionView x:Name="cv">
+
+<CollectionView.Header>
+    <Label Text="This is a Header" FontSize="22"/>
+</CollectionView.Header>
+
+<CollectionView.Footer>
+    <Label Text="This is a Footer" FontSize="30"/>
+</CollectionView.Footer>
+
        <CollectionView.ItemTemplate>
            <DataTemplate>
                <VerticalStackLayout>
