@@ -15,5 +15,6 @@ public class MainActivity : MauiAppCompatActivity
     public MainActivity()
     {
         Instance = this;
+
     }
 }

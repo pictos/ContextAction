@@ -42,13 +42,12 @@ class MyDelegate :ReorderableItemsViewDelegator<ReorderableItemsView,
         var send = UIAction.Create("enviar", UIImage.ActionsImage, "2", (action) => { Log(row); });
 
         var createMenu = UIMenu.Create([edit, send]);
-        
+
         return UIContextMenuConfiguration.Create(null, null, (x) => createMenu);
     }
 
     static void Log(int id)
     {
-        
         Console.WriteLine("###############");
         Console.WriteLine("###############");
         Console.WriteLine($"Pressed {id}");
