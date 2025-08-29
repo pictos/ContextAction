@@ -4,8 +4,11 @@ using UIKit;
 #elif ANDROID
 using Android.Views;
 using Android.Widget;
-using static Android.Icu.Text.Transliterator;
+#elif WINDOWS
+using Microsoft.UI.Xaml;
 #endif
+
+
 
 namespace ContextMenu;
 
@@ -39,6 +42,36 @@ public partial class MainPage : ContentPage
 #elif ANDROID
 		var platformView = (ImageView)img.Handler.PlatformView!;
 		platformView.SetOnCreateContextMenuListener(new MyContextMenuListener());
+#elif WINDOWS
+		var platformView = (FrameworkElement)img.Handler.PlatformView!;
+		platformView.ContextFlyout = CreateMenu();
+
+
+		static Microsoft.UI.Xaml.Controls.MenuFlyout CreateMenu()
+		{
+			var myContextMenu = new Microsoft.UI.Xaml.Controls.MenuFlyout();
+			var items = myContextMenu.Items;
+
+			var item1 = new Microsoft.UI.Xaml.Controls.MenuFlyoutItem
+			{
+				Text = "Option 1"
+			};
+
+			item1.Click += (s, e) => System.Diagnostics.Debug.WriteLine("Option 1 clicked");
+
+			var item2 = new Microsoft.UI.Xaml.Controls.MenuFlyoutItem
+			{
+				Text = "Option 2"
+			};
+
+			item2.Click += (s, e) => System.Diagnostics.Debug.WriteLine("Option 2 clicked");
+
+			items.Add(item1);
+			items.Add(item2);
+
+			return myContextMenu;
+		}
+
 #endif
 	}
 }
